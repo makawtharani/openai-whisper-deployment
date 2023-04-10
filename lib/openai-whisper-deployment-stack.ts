@@ -124,6 +124,13 @@ export class OpenaiWhisperDeploymentStack extends cdk.Stack {
       }).next(new sfn.Succeed(this, "Model Deployed"))
     });
     stateMachine.node.addDependency(sgRole)
+
+    new tasks.StepFunctionsStartExecution(this, 'stepFunctionExecution', {
+      stateMachine: stateMachine,
+      name: 'DeploymentExecution'
+    })
+
+    
     
   }
 }
