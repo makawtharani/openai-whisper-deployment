@@ -164,6 +164,7 @@ export class OpenaiWhisperDeploymentStack extends cdk.Stack {
       partitionKey: { name: 'jobId', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'result', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,  // Use on-demand billing mode
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
     // Create a Lambda function to process job results and store them in the DynamoDB table
