@@ -19,7 +19,7 @@ def main(event, context):
             Item={
                 'jobId': jobId,
                 'result': result,
-                'eventTime': 
+                'eventTime': eventTime
             }
         )
     return {
