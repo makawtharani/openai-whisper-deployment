@@ -35,7 +35,7 @@ At the end, the script provides output which includes the names of the created S
 When a job result is produced by the SageMaker model, it is sent to the appropriate SNS topic depending on whether the job was successful or not. 
 The SNS topic triggers the Lambda function, which processes the result and stores it in the DynamoDB table.
 The following diagram shows the architecture and workflow of the solution.
-![Architecture](documentation/async-architecture.png?raw=true)
+![Architecture](documentation/arch.png?raw=true)
 
 
 ## Asynchronous inference
