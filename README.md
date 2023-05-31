@@ -35,7 +35,7 @@ At the end, the script provides output which includes the names of the created S
 When a job result is produced by the SageMaker model, it is sent to the appropriate SNS topic depending on whether the job was successful or not. 
 The SNS topic triggers the Lambda function, which processes the result and stores it in the DynamoDB table.
 The following diagram shows the architecture and workflow of the solution.
-![alt text](https://github.com/makawtharani/openai-whisper-deployment/documentation/arch.png?raw=true)
+![Architecture](documentation/async-architecture.png?raw=true)
 
 
 ## Asynchronous inference
@@ -44,7 +44,7 @@ This option is ideal for requests with large payload sizes (up to 1GB), long pro
 Asynchronous Inference enables you to save on costs by autoscaling the instance count to zero when there are no requests to process, so you only pay when your endpoint is processing requests.
 ### How it works
 Creating an asynchronous inference endpoint is similar to creating real-time inference endpoints. You can use your existing SageMaker models and only need to specify the AsyncInferenceConfig object while creating your endpoint configuration with the EndpointConfig field in the CreateEndpointConfig API. The following diagram shows the architecture and workflow of Asynchronous Inference.
-![alt text](https://github.com/makawtharani/openai-whisper-deployment/documentation/async-architecture.png?raw=true)
+![Architecture](documentation/async-architecture.png?raw=true)
 To invoke the endpoint, you need to place the request payload in Amazon S3 and provide a pointer to this payload as a part of the InvokeEndpointAsync request. 
 Upon invocation, SageMaker queues the request for processing and returns an identifier and output location as a response. 
 Upon processing, SageMaker places the result in the Amazon S3 location. We receive success or error notifications with Amazon SNS.
