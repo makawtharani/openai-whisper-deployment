@@ -13,12 +13,14 @@ s3_bucket = '' # enter s3 bucket for the file you want to transcribe
 s3_key = '' # enter s3_key for the file you want to transcribe
 job_id= '' # enter job id
 language= '' # enter language
+ddbtable='' # enter dynamodb table name
 
 payload = {
     "s3_bucket":s3_bucket,
     "s3_key": s3_key,
     "job_id": job_id,
-    "language": language
+    "language": language,
+    "ddbtable": ddbtable
 }
 
 s3_key_for_input = s3_key.rsplit('/', 1)[0] + '/asynch_input_file.json'

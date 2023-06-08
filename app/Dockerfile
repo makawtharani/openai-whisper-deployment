@@ -9,7 +9,7 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -
 ENV PATH="/opt/conda/bin:${PATH}"
 
 # Install packages
-RUN pip install -U openai-whisper flask boto3
+RUN pip install -U openai-whisper flask boto3 botocore
 RUN conda install -y ffmpeg
 
 # Copy server script

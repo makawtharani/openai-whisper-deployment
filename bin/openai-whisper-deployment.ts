@@ -8,6 +8,7 @@ new OpenaiWhisperDeploymentStack(app, 'OpenaiWhisperDeploymentStack', {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
    * but a single synthesized template can be deployed anywhere. */
+  description: "This is my OpenAI Whisper deployment stack"
 
   /* Uncomment the next line to specialize this stack for the AWS Account
    * and Region that are implied by the current CLI configuration. */

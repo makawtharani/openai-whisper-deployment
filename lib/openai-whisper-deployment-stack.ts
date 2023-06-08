@@ -14,18 +14,20 @@ export class OpenaiWhisperDeploymentStack extends cdk.Stack {
 
     // Set up constants for resources names
     const imageUri = "014661450282.dkr.ecr.eu-west-1.amazonaws.com/whisper-asr-v1";
-    const model_name = `whisper-asr-${Math.floor(Math.random() * 1000000)}`;
-    const config_name = `whisper-asr-config-${Math.floor(Math.random() * 1000000)}`;
-    const endpoint_name = `whisper-asr-endpoint-${Math.floor(Math.random() * 1000000)}`;
-    const instance_type = "ml.g4dn.xlarge";
-    let bucketName = `whisper-asr-model-bucket-${Math.floor(Math.random() * 1000000)}`;
-
+    const instance_type = "ml.g4dn.2xlarge";
+    const initialInstanceCount = 1;
 
     // Create an S3 bucket
     // The bucket will be automatically deleted when the stack is deleted
     const modelBucket = new s3.Bucket(this, 'WhisperASRModelBucket', {
-      bucketName: bucketName, // Random bucket name
       removalPolicy: cdk.RemovalPolicy.DESTROY, // Automatically delete bucket when stack is deleted
+    });
+
+    // Create a DynamoDB table to store job results
+    const table = new dynamodb.Table(this, 'JobResultsTable', {
+      partitionKey: { name: 'job_id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,  // Use on-demand billing mode
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
     // Create a role for SageMaker to assume
@@ -80,6 +82,19 @@ export class OpenaiWhisperDeploymentStack extends cdk.Stack {
             }),
           ],
         }),
+        // New policy for DynamoDB access
+        DynamoDBAccess: new iam.PolicyDocument({
+          statements: [
+            new iam.PolicyStatement({
+              actions: [
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem"
+              ],
+              resources: [table.tableArn]
+            }),
+          ],
+        }),
       }
     })
 
@@ -119,7 +134,7 @@ export class OpenaiWhisperDeploymentStack extends cdk.Stack {
     // Create a SageMaker model
     const sagemakerModel = new sagemaker.CfnModel(this, 'MyCfnModel', {
       executionRoleArn: sgRole.roleArn,
-      modelName: model_name,
+      // modelName: model_name,
       primaryContainer: containerDefinitionProperty
     });
     sagemakerModel.node.addDependency(sgRole)
@@ -142,30 +157,22 @@ export class OpenaiWhisperDeploymentStack extends cdk.Stack {
     const cfnEndpointConfig = new sagemaker.CfnEndpointConfig(this, 'MyCfnEndpointConfig', {
       productionVariants: [{
         initialVariantWeight: 1.0,
-        modelName: model_name,
+        modelName: sagemakerModel.attrModelName,
         variantName: 'default',
-        initialInstanceCount: 1,
+        initialInstanceCount: initialInstanceCount,
         instanceType: instance_type
       }],
-      endpointConfigName: config_name,
+      // endpointConfigName: config_name,
       asyncInferenceConfig: asyncInferenceConfigProperty, // added this line
     });
     cfnEndpointConfig.node.addDependency(sagemakerModel)
 
     // Create a SageMaker endpoint
     const cfnEndpoint = new sagemaker.CfnEndpoint(this, 'MyCfnEndpoint', {
-      endpointConfigName: config_name,
-      endpointName: endpoint_name,
+      endpointConfigName: cfnEndpointConfig.attrEndpointConfigName,
+      // endpointName: endpoint_name,
     });
     cfnEndpoint.node.addDependency(cfnEndpointConfig)
-
-    // Create a DynamoDB table to store job results
-    const table = new dynamodb.Table(this, 'JobResultsTable', {
-      partitionKey: { name: 'jobId', type: dynamodb.AttributeType.STRING },
-      sortKey: { name: 'result', type: dynamodb.AttributeType.STRING },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,  // Use on-demand billing mode
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
 
     // Create a Lambda function to process job results and store them in the DynamoDB table
     const jobResultsLambda = new lambda.Function(this, 'JobResultsFunction', {
@@ -186,14 +193,17 @@ export class OpenaiWhisperDeploymentStack extends cdk.Stack {
 
     // Output the names of the created resources for reference
     new cdk.CfnOutput(this, 'BucketNameOutput', {
-      value: bucketName,
+      value: modelBucket.bucketName,
       description: 'The name of the created S3 bucket',
     });
     new cdk.CfnOutput(this, 'EndpointNameOutput', {
-      value: endpoint_name,
+      value: cfnEndpoint.attrEndpointName,
       description: 'The name of the deployed SageMaker endpoint',
     });
-
+    new cdk.CfnOutput(this, 'DynamodbTableName', {
+      value: table.tableName,
+      description: 'The name of the created Dynamodb table',
+    });
   }
 }
 
